@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import Plotly from 'plotly.js-dist-min';
+import Plotly, { Data, Layout } from 'plotly.js-dist-min';
+
 
 onMounted(() => {
-  Plotly.newPlot("gd",
-            /* JSON object */ {
-      "data": [{ "y": [1, 2, 3] }],
-      "layout": { "width": 600, "height": 400 }
-    })
+  const data: Data[] = [{ y: [1, 2, 3]}];
+  const layout: Partial<Layout> = { width: 600, height: 400 };
+
+  Plotly.newPlot("gd", data, layout)
 })
 </script>
 

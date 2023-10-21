@@ -4,8 +4,8 @@ FROM node:18
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json for installing dependencies
-COPY package*.json ./
+# Copy package.json, package-lock.json and vite.config.ts
+COPY package*.json vite.config.ts ./
 
 # Install application dependencies
 RUN npm install
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 5173
 
 # Run the development server
-CMD ["npm", "run", "serve"]
+CMD ["npm", "run", "dev"]

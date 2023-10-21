@@ -16,3 +16,31 @@ If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has a
    1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
    2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
 2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+
+# How to run this example
+
+If you have the [current LTS version of nodejs ](https://nodejs.org/en) installed, you can run this example without docker by first executing
+
+```sh
+npm install
+```
+
+and then 
+
+```sh
+npm run dev
+```
+
+This will expose website to the local network. This has to done for compatibility with docker.
+If you don't have nodejs installed you can you use docker.
+
+First build the image.
+
+```sh
+docker build -t plotly-demo .
+```
+Then run it.
+
+```sh
+docker run -p 5173:5713 plotly-demo
+```
