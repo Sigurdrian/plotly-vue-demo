@@ -50,3 +50,7 @@ Then run it with
 ```sh
 docker run -p 5173:5713 plotly-demo
 ```
+
+# Where is the code I actually need?
+
+The code you mainly want to change is located in [`src/App.vue`](src/App.vue). Since Plotly loads graphs into DOM elements (in this case the div with the id "gd"), the function call to Plotly needs to be wrapped inside the `onMounted` callback which is executed by Vue after the DOM tree of the component has been created. This basically means that if you try to create a Plotly element before the corresponding div is created it results in an error. The Callback ensures that the div is already created. For more information please refer to the Vue documentation about (Lifecycle Hooks)[https://vuejs.org/api/composition-api-lifecycle.html].
