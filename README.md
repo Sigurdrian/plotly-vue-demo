@@ -19,7 +19,13 @@ If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has a
 
 # How to run this example
 
-If you have the [current LTS version of nodejs ](https://nodejs.org/en) installed, you can run this example without docker by first executing
+For the following code snippets it is assumed that the working directory is in the repository. This means that after cloning the repo you have to run
+
+```sh
+cd plotly-vue-demo
+```
+
+If you have the [current LTS version of nodejs](https://nodejs.org/en) installed, you can run this example without docker by first executing
 
 ```sh
 npm install
@@ -31,15 +37,15 @@ and then
 npm run dev
 ```
 
-This will expose website to the local network. This has to done for compatibility with docker.
-If you don't have nodejs installed you can you use docker.
+This will expose website to the local network. This has to be done for compatibility with docker.
+If you don't have nodejs installed you can use docker.
 
-First build the image.
+First build the image with the command
 
 ```sh
 docker build -t plotly-demo .
 ```
-Then run it.
+Then run it with
 
 ```sh
 docker run -p 5173:5713 plotly-demo
