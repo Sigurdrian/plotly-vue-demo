@@ -1,42 +1,12 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import Plotly, { Data, Layout } from 'plotly.js-dist-min';
+import TimeGraph from './Common/TimeGraph.vue'
 
-
-onMounted(() => {
-  const data: Data[] = [{ y: [1, 2, 3]}];
-  const layout: Partial<Layout> = { width: 600, height: 400 };
-
-  Plotly.newPlot("gd", data, layout)
-})
 </script>
 
 <template>
-  <h1> Plotly Demo </h1>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <div id="gd"> </div>
+  <h1> Topics over Time Demo </h1>
+<TimeGraph />
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
 </style>
