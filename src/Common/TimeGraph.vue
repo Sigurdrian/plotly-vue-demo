@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { TopicData } from '@/types/topics.ts';
-import { Data, Layout } from 'plotly.js-dist-min';
+import { onMounted, onBeforeUnmount, ref } from 'vue';
+import TopicData from '../types/topics';
+import { CustomPlotRelayoutEvent } from '../types/customPlotlyInterfaces';
+import { Data, Layout, PlotRelayoutEvent, PlotlyHTMLElement } from 'plotly.js-dist-min';
+
+const graph = ref<PlotlyHTMLElement | null>(null);
+
+// Reactive property to store the currently displayed range
+const xRange = ref<string[] | null>(null);
 
 // Reactive property to store the loaded data
 const loading = ref(true); // Initial state is loading
@@ -9,7 +15,7 @@ const loading = ref(true); // Initial state is loading
 // Reactive property to store the loaded data
 const tot_data = ref<TopicData[] | null>(null);
 
-function wrapText(text : string, maxCharsPerLine : number) {
+function wrapText(text: string, maxCharsPerLine: number) {
   const words = text.split(' ');
   let wrappedText = '';
   let lineLength = 0;
@@ -45,23 +51,71 @@ function loadData() {
     });
 }
 
+// Function to handle a range change
+function rangeChange(event: PlotRelayoutEvent) {
+    const relayoutData = event as CustomPlotRelayoutEvent;
+    // eventData will contain the updated range for the x-axis
+    // This will check if the event data contains x-axis update
+    if (relayoutData['xaxis.range']) {
+      xRange.value = [
+        relayoutData['xaxis.range'][0],
+        relayoutData['xaxis.range'][1]
+      ];
+      console.log('Updated range of the x-axis:', xRange.value);
+    };
+  }
+
 onMounted(async () => {
   // wait for Plotly to load
   const Plotly = (await import('plotly.js-dist-min')).default;
 
   const graphContainerId = "gd";
-  const layout: Partial<Layout> = { width: 1000, height: 600 };
-  Plotly.newPlot(graphContainerId, [], layout);
+
+  const layout: Partial<Layout> = {
+    width: 1000,
+    height: 600,
+    xaxis: {
+      autorange: true,
+      rangeselector: {
+        buttons: [
+          {
+            count: 1,
+            label: '1m',
+            step: 'month',
+            stepmode: 'backward'
+          },
+          {
+            count: 6,
+            label: '6m',
+            step: 'month',
+            stepmode: 'backward'
+          },
+          { step: 'all' }
+        ]
+      },
+      rangeslider: { visible: true },
+      type: 'date'
+    },
+  };
+
+  graph.value = await Plotly.newPlot(graphContainerId, [], layout);
+
+  graph.value.on('plotly_relayout', rangeChange);
+
 
   loadData().then(() => {
     if (tot_data.value) {
       // Assuming you want to do this for the first topic in your JSON data
       const data: Data[] = tot_data.value.map(topic => {
-        const mentions = topic.mentions;
+        // filter out days where a topic wasn't mentioned
+        const filteredEntries = Object.entries(topic.mentions).filter(([, value]) => value !== 0);
+        const xValues = filteredEntries.map(([key]) => key);
+        const yValues = filteredEntries.map(([, value]) => value);
         return {
-          x: Object.keys(mentions),
-          y: Object.values(mentions).map(Number), // Convert values to numbers, just in case they are not already
+          x: xValues,
+          y: yValues.map(Number), // Convert values to numbers, just in case they are not already
           type: 'scatter', // assuming you want a scatter plot for each topic
+          mode: 'lines',
           name: wrapText(topic.topic, 40) // Use the topic as the name for the individual series
         };
       });
@@ -75,6 +129,12 @@ onMounted(async () => {
     }
   });
 });
+
+onBeforeUnmount(() => {
+  graph.value?.removeAllListeners('plotly_relayout');
+});
+
+
 </script>
 
 <template>
@@ -116,4 +176,5 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   height: 60vh;
-}</style>
+}
+</style>
