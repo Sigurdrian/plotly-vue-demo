@@ -2,9 +2,13 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue';
 import TopicData from '../types/topics';
 import { CustomPlotRelayoutEvent } from '../types/customPlotlyInterfaces';
-import { Data, Layout, PlotRelayoutEvent, PlotlyHTMLElement } from 'plotly.js-dist-min';
+import DualrangeSlider from './DualrangeSlider.vue'
+import { Data, Datum, Layout, Config, PlotRelayoutEvent, PlotlyHTMLElement } from 'plotly.js-dist-min';
+import Plotly from 'plotly.js';
 
+const plotly = ref<typeof Plotly | null>(null); // Ref to hold the Plotly instance
 const graph = ref<PlotlyHTMLElement | null>(null);
+const graphContainerId = "gd";
 
 // Reactive property to store the currently displayed range
 const xRange = ref<string[] | null>(null);
@@ -53,23 +57,22 @@ function loadData() {
 
 // Function to handle a range change
 function rangeChange(event: PlotRelayoutEvent) {
-    const relayoutData = event as CustomPlotRelayoutEvent;
-    // eventData will contain the updated range for the x-axis
-    // This will check if the event data contains x-axis update
-    if (relayoutData['xaxis.range']) {
-      xRange.value = [
-        relayoutData['xaxis.range'][0],
-        relayoutData['xaxis.range'][1]
-      ];
-      console.log('Updated range of the x-axis:', xRange.value);
-    };
-  }
+  const relayoutData = event as CustomPlotRelayoutEvent;
+  // eventData will contain the updated range for the x-axis
+  // This will check if the event data contains x-axis update
+  if (typeof relayoutData['xaxis.range[0]'] === 'string'
+    && typeof relayoutData['xaxis.range[1]'] === 'string') {
+    xRange.value = [
+      relayoutData['xaxis.range[0]'],
+      relayoutData['xaxis.range[1]']
+    ];
+    console.log('Updated range of the x-axis:', xRange.value);
+  };
+}
 
 onMounted(async () => {
   // wait for Plotly to load
-  const Plotly = (await import('plotly.js-dist-min')).default;
-
-  const graphContainerId = "gd";
+  plotly.value = (await import('plotly.js-dist-min')).default;
 
   const layout: Partial<Layout> = {
     width: 1000,
@@ -93,14 +96,24 @@ onMounted(async () => {
           { step: 'all' }
         ]
       },
-      rangeslider: { visible: true },
       type: 'date'
     },
   };
 
-  graph.value = await Plotly.newPlot(graphContainerId, [], layout);
+  const config: Partial<Config> = {
+    modeBarButtonsToRemove: [
+      'zoom2d',
+      'pan2d',
+      'select2d',
+      'lasso2d',
+      'zoomIn2d',
+      'zoomOut2d',
+      'autoScale2d'
+    ]
+  };
 
-  graph.value.on('plotly_relayout', rangeChange);
+  graph.value = await plotly.value.newPlot(graphContainerId, [], layout, config);
+  graph.value?.on('plotly_relayout', rangeChange);
 
 
   loadData().then(() => {
@@ -120,7 +133,11 @@ onMounted(async () => {
         };
       });
 
-      Plotly.react(graphContainerId, data, layout);
+      if (plotly.value) {
+        plotly.value.react(graphContainerId, data, layout);
+      } else {
+        console.error('Plotly failed to load');
+      }
 
       // Plotly has been loaded, set loading to false
       loading.value = false;
@@ -134,7 +151,17 @@ onBeforeUnmount(() => {
   graph.value?.removeAllListeners('plotly_relayout');
 });
 
-
+function handleSliderChange(rangeStrings: string[]) {
+  //console.log('SliderChange: ', rangeStrings)
+  const newRange: [Datum, Datum] = [
+    rangeStrings[0] as Datum,
+    rangeStrings[1] as Datum,
+  ]
+  plotly.value?.relayout(graphContainerId, {
+    // Update the x-axis range
+    'xaxis.range': newRange
+  });
+};
 </script>
 
 <template>
@@ -142,7 +169,16 @@ onBeforeUnmount(() => {
     <div class="loader"></div>
     <p class="loader-label">Loading...</p>
   </div>
-  <div v-show="!loading" id="gd"> </div>
+  <div v-show="!loading" :id="graphContainerId"> </div>
+  <div v-show="!loading" class="toolstrip">
+    <button>
+      Get Range
+    </button>
+    <input type="date">
+    <DualrangeSlider :start="'2023-08-01'" :end="'2023-12-30'" :from="'2023-08-01'" :to="'2023-12-24'"
+      @sliderChangeEvent="handleSliderChange" />
+    <input type="date">
+  </div>
 </template>
 
 <style scoped>
@@ -155,6 +191,14 @@ onBeforeUnmount(() => {
   height: 120px;
   animation: spin 2s linear infinite;
 }
+
+.toolstrip {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+
 
 .loader-label {
   position: absolute;
