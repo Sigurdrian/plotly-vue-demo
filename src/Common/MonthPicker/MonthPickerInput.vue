@@ -1,0 +1,169 @@
+<template>
+  <div v-click-outside="hide" class="month-picker-input-container">
+    <month-picker
+      v-show="monthPickerVisible"
+      :default-year="defaultYear"
+      :default-month="defaultMonth"
+      :lang="lang"
+      :months="months"
+      :no-default="noDefault"
+      :show-year="showYear"
+      :highlight-exact-date="highlightExactDate"
+      :clearable="clearable"
+      :variant="variant"
+      :editable-year="editableYear"
+      :max-date="maxDate"
+      :min-date="minDate"
+      :year-only="yearOnly"
+      :range="range"
+      @input="populateInput"
+      @change="updateDate"
+    />
+    <input
+      v-model="selectedDate"
+      class="month-picker-input"
+      type="text"
+      :placeholder="placeholder"
+      readonly
+      @click="showMonthPicker()"
+    />
+  </div>
+</template>
+
+<script>
+import MonthPicker from "./MonthPicker.vue";
+import monthPicker from "./month-picker";
+
+export default {
+  name: "MonthPickerInput",
+  directives: {
+    clickOutside: {
+      bind: function (el, binding, vnode) {
+        el.event = function (event) {
+          if (!(el === event.target || el.contains(event.target))) {
+            vnode.context[binding.expression](event);
+          }
+        };
+        document.body.addEventListener("click", el.event);
+      },
+      unbind: function (el) {
+        document.body.removeEventListener("click", el.event);
+      },
+      beforeMount: (el, binding) => {
+        el.clickOutsideEvent = (event) => {
+          if (!(el == event.target || el.contains(event.target))) {
+            binding.value();
+          }
+        };
+        document.addEventListener("click", el.clickOutsideEvent);
+      },
+      unmounted: (el) => {
+        document.removeEventListener("click", el.clickOutsideEvent);
+      },
+    },
+  },
+  components: {
+    MonthPicker,
+  },
+  mixins: [monthPicker],
+  props: {
+    placeholder: {
+      type: String,
+      default: null,
+    },
+  },
+  emits: ["change", "input"],
+  data() {
+    return {
+      monthPickerVisible: false,
+      selectedDate: null,
+    };
+  },
+  watch: {
+    defaultYear: {
+      immediate: true,
+      handler(value) {
+        if (!value || !this.inputPreFilled) return;
+        this.selectedDate = this.dateFormat
+          .replace("%n", this.monthsByLang[this.defaultMonth - 1])
+          .replace("%Y", value);
+      },
+    },
+    defaultMonth: {
+      immediate: true,
+      handler(value) {
+        if (!value || !this.inputPreFilled) return;
+        this.selectedDate = this.dateFormat
+          .replace("%n", this.monthsByLang[value - 1])
+          .replace("%Y", this.defaultYear);
+      },
+    },
+  },
+  methods: {
+    populateInput(date) {
+      if (this.range) {
+        if (
+          date.rangeFromYear === date.rangeToYear &&
+          date.rangeFromMonth &&
+          date.rangeToMonth
+        ) {
+          this.selectedDate = `${date.rangeFromMonth} - ${date.rangeToMonth}, ${date.year}`;
+        } else if (date.rangeFromMonth && date.rangeToMonth) {
+          this.selectedDate = `${date.rangeFromMonth} ${date.rangeFromYear} - ${date.rangeToMonth} ${date.rangeToYear}`;
+        }
+      } else {
+        this.selectedDate = this.dateFormat
+          .replace("%n", date.month)
+          .replace("%Y", date.year);
+      }
+
+      this.monthPickerVisible = false;
+      this.$emit("input", date);
+    },
+    showMonthPicker() {
+      this.monthPickerVisible = !this.monthPickerVisible;
+    },
+    hide() {
+      this.monthPickerVisible = false;
+    },
+    updateDate(date) {
+      if (this.range) {
+        this.selectedDate = `${date.rangeFromMonth} - ${date.rangeToMonth}, ${date.year}`;
+      } else {
+        this.selectedDate = this.dateFormat
+          .replace("%n", date.month)
+          .replace("%Y", date.year);
+      }
+      this.$emit("change", date);
+    },
+  },
+};
+</script>
+<style scoped>
+.month-picker-input-container {
+  position: relative;
+  flex-grow: 0;
+  flex-shrink: 1;
+}
+
+.month-picker-input {
+  padding: 0.5em 1em;
+  font-size: 1em;
+  width: 8em;
+  border-radius: 5px;
+  outline: none;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  transition: all 350ms cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.month-picker-input:focus {
+  border-color: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.month-picker__container {
+  position: absolute;
+  top: -18em;
+  right: -8em;
+}
+</style>
