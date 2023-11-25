@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.5.1",
-    "@types/plotly.js": "^2.12.29",
+    "@types/plotly.js": "^2.12.30",
     "@types/plotly.js-dist-min": "^2.3.3",
     "@vitejs/plugin-vue": "^4.2.3",
     "@vue/eslint-config-prettier": "^8.0.0",
