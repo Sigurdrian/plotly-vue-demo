@@ -49,6 +49,7 @@ const slider_end = ref<string>('');
 const slider_from = ref<string>('');
 const slider_to = ref<string>('');
 
+const theme = ref<string>('default');
 
 //                                    Local Functions
 // ============================================================================
@@ -199,6 +200,12 @@ function updateUIfromDataXrange() {
 // ============================================================================
 
 onMounted(async () => {
+
+  // when mounted check the color theme
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    theme.value = 'dark';
+  }
+
   // wait for Plotly to load
   plotly.value = (await import("plotly.js-dist-min")).default;
 
@@ -281,11 +288,11 @@ onBeforeUnmount(() => {
   <div v-if="!loading" class="toolstrip">
     <button>Get Range</button>
     <month-picker-input :default-month="start_default_month" :default-year="start_default_year" :input-pre-filled="true"
-      lang="de"></month-picker-input>
+      :variant="theme" lang="de"></month-picker-input>
     <DualrangeSlider :start="slider_start" :end="slider_end" :from="slider_from" :to="slider_to"
       @sliderChangeEvent="handleSliderChange" />
     <month-picker-input :default-month="end_default_month" :default-year="end_default_year" :input-pre-filled="true"
-      lang="de"></month-picker-input>
+      :variant="theme" lang="de"></month-picker-input>
   </div>
 </template>
 
