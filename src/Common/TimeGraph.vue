@@ -15,7 +15,7 @@ import {
   PlotRelayoutEvent,
   PlotlyHTMLElement,
 } from "plotly.js-dist-min";
-import Plotly from "plotly.js";
+import Plotly from "plotly.js-dist-min";
 import MonthPickerInput from "./MonthPicker/MonthPickerInput.vue";
 
 //                                    Defines
